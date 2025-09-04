@@ -8,6 +8,7 @@ from app.modules.appointments.schemas import (
     WaitlistCreate, WaitlistUpdate, CheckinCreate
 )
 from app.modules.events.outbox import OutboxService
+from app.modules.notifications.service import NotificationsService
 
 VALID_NEXT = {
     "requested": {"pending_confirm", "confirmed", "canceled"},
@@ -51,6 +52,12 @@ class AppointmentService:
             org_id, "APPT_CONFIRMED", "appointment", obj.id,
             {"start": obj.confirmed_start.isoformat(), "end": obj.confirmed_end.isoformat() if obj.confirmed_end else None}
         )
+        if obj.patient_id:
+            await NotificationsService(self.session).send(
+                org_id, channel="sms", to="+10000000000",  # replace in UI with actual contact
+                subject=None, body="Your appointment is confirmed for ${start}",
+                variables={"start": obj.confirmed_start.isoformat()}
+            )
         await self.session.commit()
         return obj
 

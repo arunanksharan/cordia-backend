@@ -11,8 +11,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.base import Base, TimestampedTenantMixin
 from app.core.db import SessionLocal
 from app.platform.provider_registry import registry
+# add imports
+import httpx
+from app.modules.webhooks.repository import WebhookRepository
 
 log = logging.getLogger("event.outbox")
+
+async def _deliver_webhooks(session: AsyncSession, ev_obj):
+    # fetch subscriptions for org
+    subs = await WebhookRepository(session).list_active(ev_obj.org_id)
+    if not subs: return
+    payload = {
+        "id": str(ev_obj.id),
+        "type": ev_obj.event_type,
+        "subject": {"type": ev_obj.subject_type, "id": ev_obj.subject_id},
+        "occurred_at": ev_obj.occurred_at.isoformat(),
+        "data": ev_obj.payload,
+        "org_id": str(ev_obj.org_id)
+    }
+    async with httpx.AsyncClient(timeout=5) as client:
+        for sub in subs:
+            try:
+                headers = {"X-PRM-Org": str(ev_obj.org_id)}
+                if sub.secret: headers["X-PRM-Signature"] = sub.secret  # TODO: HMAC later
+                await client.post(sub.endpoint_url, json=payload, headers=headers)
+            except Exception:
+                # swallow errors; outbox retry still applies for bus, not webhooks; we could add retry table later
+                pass
+
 
 class EventOutbox(Base, TimestampedTenantMixin):
     event_type: Mapped[str] = mapped_column(String(64))
@@ -120,6 +146,7 @@ async def run_outbox_relay(poll_interval_seconds: float = 1.0):
                                 "occurred_at": ev.occurred_at.isoformat(),
                                 "outbox_id": str(ev.id),
                             })
+                            await _deliver_webhooks(session, ev)
                             await repo.mark_sent(ev)
                         except Exception as ex:  # noqa
                             log.exception("Publish failed")

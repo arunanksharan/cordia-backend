@@ -32,3 +32,7 @@ class LocalFilesystemStorage(ObjectStoragePort):
         path = self._path(key)
         if os.path.exists(path):
             os.remove(path)
+
+    def presign_post(self, key: str, expires_seconds: int = 600) -> dict:
+        # Emulate: client will PUT raw bytes to our API endpoint
+        return {"url": f"/api/v1/media/direct_put?key={quote(key)}", "fields": {}}

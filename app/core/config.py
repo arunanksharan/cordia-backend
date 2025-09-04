@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     
     EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
     EMBEDDINGS_DIM: int = 384
+    DB_MANAGE: str = "alembic"  # "alembic" | "create_all"
+
 
     @field_validator("POSTGRES_DSN")
     @classmethod

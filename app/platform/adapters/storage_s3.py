@@ -1,4 +1,4 @@
-import boto3
+import boto3,os, datetime
 from botocore.client import Config
 from app.platform.ports.object_storage import ObjectStoragePort
 from app.core.config import settings
@@ -41,3 +41,11 @@ class S3Storage(ObjectStoragePort):
 
     def delete(self, key: str) -> None:
         self.s3.delete_object(Bucket=self.bucket, Key=key)
+
+    def presign_post(self, key: str, expires_seconds: int = 600) -> dict:
+        s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
+        bucket = os.environ.get("S3_BUCKET")
+        conditions = [["content-length-range", 0, 104857600]]
+        fields = {"acl":"private","Content-Type":"application/octet-stream"}
+        url = s3.generate_presigned_post(bucket, key, Fields=fields, Conditions=conditions, ExpiresIn=expires_seconds)
+        return url

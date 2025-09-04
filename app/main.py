@@ -7,6 +7,7 @@ from contextvars import ContextVar
 import asyncio
 
 from app.modules.events.outbox import run_outbox_relay
+from app.modules.vector.setup import ensure_vector_indexes
 
 
 setup_logging()
@@ -33,6 +34,7 @@ async def add_request_id(request: Request, call_next):
 @app.on_event("startup")
 async def on_startup():
     await init_models()
+    await ensure_vector_indexes()
     app.state.outbox_task = asyncio.create_task(run_outbox_relay())
 
 @app.on_event("shutdown")

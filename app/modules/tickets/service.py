@@ -12,6 +12,8 @@ from app.modules.tickets.schemas import (
     AssignmentCreate, SlaPolicyCreate, SlaRecalcResult
 )
 from app.modules.events.outbox import OutboxService
+from app.modules.admin.repository import AdminRepository
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -40,6 +42,14 @@ class TicketService:
     # ---- Tickets ----
     async def create_ticket(self, org_id: uuid.UUID, payload: TicketCreate) -> Ticket:
         obj = await self.tickets.create(org_id, **payload.model_dump(exclude_unset=True))
+        rules = await AdminRepository(self.session).list_rules(org_id)
+        for r in rules:
+            ok = True
+            for k,v in (r.match or {}).items():
+                if getattr(obj, k, None) != v: ok = False; break
+            if ok:
+                obj.summary_auto = (obj.summary_auto or "") + f"\n[Routed to queue {r.queue_name}]"
+                break
         # SLA application
         policy = await self.sla_policies.match_for_ticket(org_id, obj.category, obj.priority)
         base = _now()
