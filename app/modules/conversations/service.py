@@ -8,6 +8,7 @@ from app.modules.conversations.schemas import (
     ChannelCreate, ConversationCreate, MessageCreate, TranscriptCreate
 )
 from app.modules.media.repository import MediaRepository
+from app.modules.events.outbox import OutboxService
 
 class ConversationService:
     def __init__(self, session: AsyncSession):
@@ -30,6 +31,10 @@ class ConversationService:
     # Conversations
     async def create_conversation(self, org_id: uuid.UUID, payload: ConversationCreate):
         obj = await self.convos.create(org_id, **payload.model_dump(exclude_unset=True))
+        await OutboxService(self.session).enqueue(
+            org_id, "CONVERSATION_CREATED", "conversation", obj.id,
+            {"patient_id": str(obj.patient_id) if obj.patient_id else None, "priority": obj.priority}
+        )
         await self.session.commit()
         return obj
 
@@ -52,13 +57,19 @@ class ConversationService:
                 return None, "media_not_found"
 
         obj = await self.messages.create(org_id, conversation_id=conversation_id, **payload.model_dump(exclude_unset=True))
-        await self.session.commit()
 
         # If text_body present, auto-create a transcript row linked to message (useful for RAG)
         if payload.content_type == "text" and payload.text_body:
-            await self.transcripts.create(org_id, message_id=obj.id, media_id=None, language=payload.locale or "en", text=payload.text_body, confidence_avg=None)
-            await self.session.commit()
+            t = await self.transcripts.create(org_id, message_id=obj.id, media_id=None, language=payload.locale or "en", text=payload.text_body, confidence_avg=None)
+        else:
+            t = None
 
+        if t:
+            await OutboxService(self.session).enqueue(
+                org_id, "TRANSCRIPT_CREATED", "transcript", t.id,
+                {"message_id": str(obj.id), "language": t.language}
+            )
+        await self.session.commit()
         return obj, None
 
     async def list_messages(self, org_id: uuid.UUID, conversation_id: uuid.UUID, limit: int = 50, offset: int = 0):
@@ -69,5 +80,9 @@ class ConversationService:
         if not data.message_id and not data.media_id:
             return None, "target_required"
         obj = await self.transcripts.create(org_id, **data.model_dump(exclude_unset=True))
+        await OutboxService(self.session).enqueue(
+            org_id, "TRANSCRIPT_CREATED", "transcript", obj.id,
+            {"message_id": str(obj.message_id) if obj.message_id else None, "media_id": str(obj.media_id) if obj.media_id else None, "language": obj.language}
+        )
         await self.session.commit()
         return obj, None

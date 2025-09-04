@@ -3,6 +3,11 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.router import api_router
 from app.core.db import init_models
+from contextvars import ContextVar
+import asyncio
+
+from app.modules.events.outbox import run_outbox_relay
+
 
 setup_logging()
 app = FastAPI(title=settings.APP_NAME)
@@ -28,5 +33,17 @@ async def add_request_id(request: Request, call_next):
 @app.on_event("startup")
 async def on_startup():
     await init_models()
+    app.state.outbox_task = asyncio.create_task(run_outbox_relay())
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    task = getattr(app.state, "outbox_task", None)
+    if task:
+        task.cancel()
+        try:
+            await task
+        except Exception:
+            pass
+
 
 app.include_router(api_router, prefix=settings.API_PREFIX)

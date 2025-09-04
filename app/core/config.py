@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: str | None = None
     S3_SECRET_KEY: str | None = None
 
+    EVENT_BUS_PROVIDER: str = "noop"  # noop | redis
+    REDIS_URL: str | None = None
+    REDIS_STREAM: str | None = None  # default "prm.events" if None
+    REDIS_STREAM_MAXLEN: int = 10000
+    
+    EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
+    EMBEDDINGS_DIM: int = 384
+
     @field_validator("POSTGRES_DSN")
     @classmethod
     def _must_asyncpg(cls, v: str):

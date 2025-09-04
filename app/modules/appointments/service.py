@@ -7,6 +7,7 @@ from app.modules.appointments.schemas import (
     AppointmentRequest, AppointmentConfirm, AppointmentUpdate, AppointmentStatusChange,
     WaitlistCreate, WaitlistUpdate, CheckinCreate
 )
+from app.modules.events.outbox import OutboxService
 
 VALID_NEXT = {
     "requested": {"pending_confirm", "confirmed", "canceled"},
@@ -46,6 +47,10 @@ class AppointmentService:
         obj.confirmed_end = payload.confirmed_end
         if payload.location_name: obj.location_name = payload.location_name
         if payload.practitioner_name: obj.practitioner_name = payload.practitioner_name
+        await OutboxService(self.session).enqueue(
+            org_id, "APPT_CONFIRMED", "appointment", obj.id,
+            {"start": obj.confirmed_start.isoformat(), "end": obj.confirmed_end.isoformat() if obj.confirmed_end else None}
+        )
         await self.session.commit()
         return obj
 
@@ -76,7 +81,12 @@ class AppointmentService:
             obj.confirmed_end = None
         if nxt == "no_show":
             obj.no_show_flag = True
+        prev = obj.status
         obj.status = nxt
+        await OutboxService(self.session).enqueue(
+            org_id, "APPT_STATUS_CHANGED", "appointment", obj.id,
+            {"from": prev, "to": nxt}
+        )
         await self.session.commit()
         return obj
 

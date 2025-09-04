@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.patients.repository import PatientRepository
 from app.modules.patients.schemas import PatientCreate, PatientUpdate
 from app.modules.patients.models import Patient
+from app.modules.events.outbox import OutboxService
 
 class PatientService:
     def __init__(self, session: AsyncSession):
@@ -11,6 +12,11 @@ class PatientService:
 
     async def create(self, org_id: uuid.UUID, payload: PatientCreate) -> Patient:
         obj = await self.repo.create(org_id, **payload.model_dump(exclude_unset=True))
+        # enqueue event in same tx
+        await OutboxService(self.session).enqueue(
+            org_id, "PATIENT_CREATED", "patient", obj.id,
+            {"legal_name": obj.legal_name, "primary_phone": obj.primary_phone}
+        )
         await self.session.commit()
         return obj
 

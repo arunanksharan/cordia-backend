@@ -11,6 +11,7 @@ from app.modules.tickets.schemas import (
     TicketNoteCreate, TaskCreate, TaskUpdate,
     AssignmentCreate, SlaPolicyCreate, SlaRecalcResult
 )
+from app.modules.events.outbox import OutboxService
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -58,6 +59,10 @@ class TicketService:
                 breach_state=_breach_state(base, base, due_reso),  # initial
                 last_recalc_at=base,
             )
+        await OutboxService(self.session).enqueue(
+            org_id, "TICKET_CREATED", "ticket", obj.id,
+            {"category": obj.category, "priority": obj.priority, "severity": obj.severity}
+        )
         await self.session.commit()
         return obj
 
@@ -91,6 +96,11 @@ class TicketService:
                     sla.paused_total_seconds += max(delta, 0)
                     sla.pause_started_at = None
                 sla.last_recalc_at = now
+            # enqueue status-changed event
+            await OutboxService(self.session).enqueue(
+                org_id, "TICKET_STATUS_CHANGED", "ticket", obj.id,
+                {"from": before_status, "to": payload.status}
+            )
         await self.session.commit()
         return obj
 
