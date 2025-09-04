@@ -1,0 +1,6 @@
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class EmbeddingsPort(Protocol):
+    def dim(self) -> int: ...
+    async def embed(self, texts: list[str]) -> list[list[float]]: ...
