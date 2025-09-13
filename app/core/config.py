@@ -3,10 +3,10 @@ from pydantic import field_validator
 from typing import Literal
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     APP_NAME: str = "prm"
-    ENV: Literal["local", "dev", "prod"] = "local"
+    ENV: Literal["local", "dev", "staging", "prod"] = "local"
     API_PREFIX: str = "/api/v1"
 
     # DB

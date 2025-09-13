@@ -1,0 +1,104 @@
+# compose.yaml (Compose Specification — no `version:`)
+
+x-app-env: &app_env
+  env_file:
+    - ./.env
+  restart: unless-stopped
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile/app.Dockerfile
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ./:/app:cached
+      - prm_data:/data
+    <<: *app_env
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false   # OK if you’re using an external Postgres
+      redis:
+        condition: service_healthy
+        required: false   # OK if you’re using an external Redis
+      minio:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  outbox:
+    build:
+      context: .
+      dockerfile: dockerfile/app.Dockerfile
+    command: >
+      python -c "import asyncio; from app.modules.events.outbox import run_outbox_relay; asyncio.run(run_outbox_relay())"
+    volumes:
+      - ./:/app:cached
+      - prm_data:/data
+    <<: *app_env
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+
+  postgres:
+    image: postgres:16
+    profiles: ["db"]
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: prm
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d prm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    profiles: ["cache"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: quay.io/minio/minio:latest
+    profiles: ["minio"]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_data:
+  minio_data:
+  prm_data:

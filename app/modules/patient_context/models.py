@@ -2,11 +2,12 @@ import uuid
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Text, JSON, ForeignKey, Boolean, Date, UniqueConstraint
 from app.core.base import Base, TimestampedTenantMixin
+from datetime import date
 
 # 1) Profile (1:1 with Patient) — demographics & preferences
 class PatientProfile(Base, TimestampedTenantMixin):
     patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patient.id"), unique=True, index=True)
-    dob: Mapped[Date | None] = mapped_column(nullable=True)
+    dob: Mapped[date | None] = mapped_column(Date, nullable=True)
     sex_at_birth: Mapped[str | None] = mapped_column(String(32), nullable=True)        # male|female|intersex|unknown
     gender_identity: Mapped[str | None] = mapped_column(String(64), nullable=True)     # free text or code
     pronouns: Mapped[str | None] = mapped_column(String(32), nullable=True)

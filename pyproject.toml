@@ -1,15 +1,25 @@
-[project]
+[tool.poetry]
 name = "prm"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "arunanksharan",email = "arunank.sharan@gmail.com"}
-]
+authors = ["arunanksharan <arunank.sharan@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-]
 
+[tool.poetry.dependencies]
+python = ">=3.11"
+fastapi = ">=0.116.1,<0.117"
+uvicorn = {version = ">=0.35.0,<0.36", extras = ["standard"]}
+pydantic = ">=2.11,<3.0"
+pydantic-settings = ">=2.10.1,<3.0"
+SQLAlchemy = ">=2.0.43,<2.1"
+asyncpg = ">=0.30.0,<0.31"
+alembic = ">=1.16.5,<1.17"
+python-jose = ">=3.5.0,<4.0"
+boto3 = ">=1.40.23,<1.41"
+python-multipart = ">=0.0.20,<0.1"
+redis = ">=6.2,<7.0"
+pgvector = ">=0.4.1,<0.5"
+python-dotenv = ">=1.1.1,<2.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

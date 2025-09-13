@@ -1,0 +1,14 @@
+import app.modules.patients.models
+import app.modules.patient_context.models
+import app.modules.conversations.models
+import app.modules.tickets.models
+import app.modules.appointments.models
+import app.modules.intake.models
+import app.modules.availability.models
+import app.modules.admin.models
+import app.modules.media.models
+import app.modules.audit.models
+import app.modules.consent.models
+import app.modules.exports.models
+import app.modules.vector.models
+import app.modules.directory.models

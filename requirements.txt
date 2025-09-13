@@ -11,3 +11,4 @@ python-multipart==0.0.9
 redis==5.0.7
 pgvector==0.2.5
 alembic==1.13.1
+python-dotenv==1.0.0
