@@ -2,7 +2,6 @@ import uuid
 from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, literal, desc
-from pgvector.sqlalchemy import l2_distance
 from app.modules.vector.models import TextChunk
 
 class VectorRepository:
@@ -35,7 +34,7 @@ class VectorRepository:
             conds.append(TextChunk.source_type == source_type)
 
         # vector distance (smaller is closer)
-        dist = l2_distance(TextChunk.embedding, query_vec).label("dist")
+        dist = TextChunk.embedding.l2_distance(query_vec).label("dist")
 
         # FTS rank
         tsvec = func.to_tsvector(literal("simple"), TextChunk.text)

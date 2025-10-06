@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import pgvector.sqlalchemy.vector
+from pgvector.sqlalchemy import Vector
 
 
 # revision identifiers, used by Alembic.
@@ -414,7 +414,7 @@ def upgrade() -> None:
     sa.Column('locator', sa.JSON(), nullable=True),
     sa.Column('text', sa.Text(), nullable=False),
     sa.Column('chunk_index', sa.Integer(), nullable=False),
-    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=384), nullable=False),
+    sa.Column('embedding', Vector(dim=384), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('org_id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),

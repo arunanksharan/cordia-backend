@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api/v1"
 
     # DB
-    POSTGRES_DSN: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/prm"
+    POSTGRES_DSN: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/prm"
 
     # Auth (for demo HS256) — in prod, use OIDC/JWKS
     JWT_ALG: str = "HS256"
