@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import Literal
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
@@ -40,8 +44,7 @@ class Settings(BaseSettings):
     REDIS_STREAM_MAXLEN: int = 10000
     
     EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
-    OPENAI_API_KEY: str="A"
-    EMBEDDINGS_DIM: int = 384
+    OPENAI_API_KEY:str = os.getenv("OPENAI_API_KEY")
     DB_MANAGE: str = "alembic"  # "alembic" | "create_all"
 
     TWILIO_WHATSAPP_NUMBER: str | None = None
