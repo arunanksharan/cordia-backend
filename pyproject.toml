@@ -20,6 +20,7 @@ python-multipart = ">=0.0.20,<0.1"
 redis = ">=6.2,<7.0"
 pgvector = ">=0.4.1,<0.5"
 python-dotenv = ">=1.1.1,<2.0"
+httpx = ">=0.28.1,<0.29"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

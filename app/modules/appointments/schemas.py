@@ -1,101 +1,99 @@
+from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
 
-# ---- Appointment ----
+# ---- Appointments ----
 
 class AppointmentRequest(BaseModel):
-    patient_id: uuid.UUID | None = None
-    reason_code: str | None = Field(default=None, pattern="^(consult|followup|diagnostics|admission|discharge_meet|other)$")
-    channel_origin: str | None = Field(default=None, pattern="^(phone|whatsapp|web|in_person|email)$")
-    requested_start: datetime | None = None
+    patient_id: uuid.UUID
+    requested_start: datetime
     requested_end: datetime | None = None
-    location_name: str | None = None
+    reason_code: str | None = None
+    reason_text: str | None = None
     practitioner_name: str | None = None
-    meta: dict | None = None
+    location_name: str | None = None
 
 class AppointmentConfirm(BaseModel):
     confirmed_start: datetime
-    confirmed_end: datetime
-    location_name: str | None = None
+    confirmed_end: datetime | None = None
     practitioner_name: str | None = None
+    location_name: str | None = None
 
 class AppointmentUpdate(BaseModel):
-    # limited updates while in confirmed/pending states
-    reason_code: str | None = Field(default=None, pattern="^(consult|followup|diagnostics|admission|discharge_meet|other)$")
-    location_name: str | None = None
+    # allow updating a subset of fields
+    requested_start: datetime | None = None
+    requested_end: datetime | None = None
+    reason_code: str | None = None
+    reason_text: str | None = None
     practitioner_name: str | None = None
-    meta: dict | None = None
+    location_name: str | None = None
 
 class AppointmentStatusChange(BaseModel):
-    status: str = Field(..., pattern="^(pending_confirm|confirmed|rescheduled|canceled|no_show|completed)$")
+    status: str
 
 class AppointmentOut(BaseModel):
     id: uuid.UUID
     org_id: uuid.UUID
-    patient_id: uuid.UUID | None
+    patient_id: uuid.UUID | None = None
     status: str
-    reason_code: str | None
-    channel_origin: str | None
-    requested_start: datetime | None
-    requested_end: datetime | None
-    confirmed_start: datetime | None
-    confirmed_end: datetime | None
-    location_name: str | None
-    practitioner_name: str | None
-    reschedule_count: int
-    no_show_flag: bool
-    meta: dict | None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    updated_at: datetime
+    # TODO: add all fields
 
 # ---- Waitlist ----
 
 class WaitlistCreate(BaseModel):
-    patient_id: uuid.UUID | None = None
-    preferences: dict = Field(default_factory=dict)
+    patient_id: uuid.UUID
     reason_code: str | None = None
-    location_name: str | None = None
+    reason_text: str | None = None
     practitioner_name: str | None = None
-    rank: int = 0
-    expires_at: datetime | None = None
+    location_name: str | None = None
+    earliest_start: datetime | None = None
+    latest_end: datetime | None = None
 
 class WaitlistUpdate(BaseModel):
-    preferences: dict | None = None
     rank: int | None = None
-    active: bool | None = None
-    expires_at: datetime | None = None
+    status: str | None = None
 
 class WaitlistOut(BaseModel):
     id: uuid.UUID
     org_id: uuid.UUID
-    patient_id: uuid.UUID | None
-    preferences: dict
-    reason_code: str | None
-    location_name: str | None
-    practitioner_name: str | None
+    patient_id: uuid.UUID
     rank: int
-    active: bool
-    expires_at: datetime | None
+    status: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    updated_at: datetime
 
 # ---- Check-in ----
 
 class CheckinCreate(BaseModel):
-    forms_completed: dict | None = None
+    forms_completed: bool = False
     payment_collected: bool = False
 
 class CheckinOut(BaseModel):
     id: uuid.UUID
     org_id: uuid.UUID
     appointment_id: uuid.UUID
-    forms_completed: dict | None
-    payment_collected: bool
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
+class BookAppointmentRequest(BaseModel):
+    conversation_id: uuid.UUID
+    preferred_time: str | None = None
+
+class N8nBookingResponse(BaseModel):
+    intent: str | None = None
+    preferred_time: str | None = None
+    preferred_location: str | None = None
+
+class N8nBookingResponsePayload(BaseModel):
+    conversation_id: uuid.UUID
+    booking_response: N8nBookingResponse | None = None
+    reply_to_user: str | None = None
+
+class DepartmentInfo(BaseModel):
+    name: str
+    reason: str
+
+class N8nDepartmentTriagePayload(BaseModel):
+    conversation_id: uuid.UUID
+    best_department: DepartmentInfo

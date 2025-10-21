@@ -16,10 +16,12 @@ class RelatedPerson(Base, TimestampedTenantMixin):
     relationship: Mapped[str] = mapped_column(String(32))  # guardian | caregiver | spouse | parent | child | other
     name: Mapped[str] = mapped_column(String(120))
 
-class Practitioner(Base, TimestampedTenantMixin):
+class IdentityProvider(Base, TimestampedTenantMixin):
+    __tablename__ = "identity_provider"
     display_name: Mapped[str] = mapped_column(String(120))
     specialty: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-class Location(Base, TimestampedTenantMixin):
+class IdentityLocation(Base, TimestampedTenantMixin):
+    __tablename__ = "identity_location"
     display_name: Mapped[str] = mapped_column(String(120))
     address: Mapped[str | None] = mapped_column(String(200), nullable=True)

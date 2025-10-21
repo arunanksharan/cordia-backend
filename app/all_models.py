@@ -12,3 +12,4 @@ import app.modules.consent.models
 import app.modules.exports.models
 import app.modules.vector.models
 import app.modules.directory.models
+import app.modules.events.outbox

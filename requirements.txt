@@ -11,6 +11,7 @@ python-multipart==0.0.9
 redis==5.0.7
 pgvector==0.2.5
 python-dotenv==1.0.0
-httpx
+httpx==0.28.1
 email-validator
 psycopg2-binary
+twilio

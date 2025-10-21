@@ -19,6 +19,7 @@ from app.modules.agents.router import router as agents_router
 from app.modules.intake.router import router as intake_router
 from app.modules.availability.router import router as availability_router
 from app.modules.patient_context.router import router as patient_context_router
+from app.modules.n8n.router import router as n8n_router
 
 
 
@@ -37,13 +38,14 @@ api_router.include_router(identity_router, tags=["identity"])
 api_router.include_router(catalogs_router, tags=["catalogs"])
 api_router.include_router(notifications_router, tags=["notifications"])
 api_router.include_router(exports_router, tags=["exports"])
-api_router.include_router(webhooks_router, tags=["webhooks"])
+api_router.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(realtime_router, tags=["realtime"])
 api_router.include_router(reports_router, tags=["reports"])
 api_router.include_router(agents_router, tags=["agents"])
 api_router.include_router(intake_router, tags=["intake"])
 api_router.include_router(availability_router, tags=["availability"])
 api_router.include_router(patient_context_router, tags=["patient_context"])
+api_router.include_router(n8n_router, tags=["n8n"])
 
 @api_router.get("/health", tags=["health"])
 async def health():

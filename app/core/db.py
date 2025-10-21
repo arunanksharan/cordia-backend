@@ -1,9 +1,14 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from typing import AsyncGenerator
 from .config import settings
 from .base import Base
 
 engine = create_async_engine(settings.POSTGRES_DSN, pool_pre_ping=True)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        yield session
 
 async def init_models():
     ## In dev-only "create_all" mode, keep old behavior; otherwise, migrations own the schema.

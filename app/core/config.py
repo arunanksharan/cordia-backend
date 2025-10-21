@@ -8,9 +8,10 @@ class Settings(BaseSettings):
     APP_NAME: str = "prm"
     ENV: Literal["local", "dev", "staging", "prod"] = "local"
     API_PREFIX: str = "/api/v1"
+    N8N_WEBHOOK_URL: str = "http://localhost:5678/webhook/whatsapp-message"
 
     # DB
-    POSTGRES_DSN: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/prm"
+    POSTGRES_DSN: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/prm"
 
     # Auth (for demo HS256) — in prod, use OIDC/JWKS
     JWT_ALG: str = "HS256"
@@ -39,8 +40,11 @@ class Settings(BaseSettings):
     REDIS_STREAM_MAXLEN: int = 10000
     
     EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
+    OPENAI_API_KEY: str="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"
     EMBEDDINGS_DIM: int = 384
     DB_MANAGE: str = "alembic"  # "alembic" | "create_all"
+
+    TWILIO_WHATSAPP_NUMBER: str | None = None
 
 
     @field_validator("POSTGRES_DSN")
