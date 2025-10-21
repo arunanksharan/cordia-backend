@@ -86,5 +86,9 @@ class IntakeService:
     async def get_session(self, org: uuid.UUID, session_id: uuid.UUID):
         return await self.repo.get_session(org, session_id)
 
-    async def list_sessions(self, org: uuid.UUID, **filters):
-        return await self.repo.list_sessions(org, **filters)
+    async def list_sessions(self, **filters):
+        return await self.repo.list_sessions(
+            patient_id=filters.get("patient_id"),
+            status=filters.get("status"),
+            conversation_id=filters.get("conversation_id")
+        )

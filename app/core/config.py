@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import Literal
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
@@ -8,6 +12,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "prm"
     ENV: Literal["local", "dev", "staging", "prod"] = "local"
     API_PREFIX: str = "/api/v1"
+    N8N_WEBHOOK_URL: str = "http://localhost:5678/webhook/whatsapp-message"
 
     # DB
     POSTGRES_DSN: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/prm"
@@ -39,8 +44,10 @@ class Settings(BaseSettings):
     REDIS_STREAM_MAXLEN: int = 10000
     
     EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
-    EMBEDDINGS_DIM: int = 384
+    OPENAI_API_KEY:str = os.getenv("OPENAI_API_KEY")
     DB_MANAGE: str = "alembic"  # "alembic" | "create_all"
+
+    TWILIO_WHATSAPP_NUMBER: str | None = None
 
 
     @field_validator("POSTGRES_DSN")

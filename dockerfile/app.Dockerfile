@@ -41,11 +41,12 @@ WORKDIR /app
 
 # Copy built wheels and install
 COPY --from=builder /wheels /wheels
+COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --upgrade pip \
- && pip install --no-index --find-links=/wheels -r /wheels/requirements.txt
+ && pip install --no-index --find-links=/wheels -r requirements.txt
 
 # Copy application code last (keeps rebuilds fast)
-COPY . /app
+COPY ./app /app
 
 # Make sure runtime dirs exist (for media/exports if using local storage)
 RUN mkdir -p /data/media /data/exports && chown -R appuser:appuser /data /app
