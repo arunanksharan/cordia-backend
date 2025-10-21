@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     REDIS_STREAM_MAXLEN: int = 10000
     
     EMBEDDINGS_PROVIDER: str = "hashing"  # hashing | openai | <add yours>
-    OPENAI_API_KEY: str="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"
+    OPENAI_API_KEY: str="A"
     EMBEDDINGS_DIM: int = 384
     DB_MANAGE: str = "alembic"  # "alembic" | "create_all"
 
